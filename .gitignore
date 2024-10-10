@@ -165,7 +165,10 @@ cython_debug/
 dog_bark_detection/dataset/
 
 dog_bark_detection/meta/
+dog_bark_detection/personal_test_audio/
 
 ESC-50-master/
 ESC-50-master.zip
+
+
 
