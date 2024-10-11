@@ -176,3 +176,19 @@ dog_bark_detection/*.h5
 dog_bark_detection/*.pkl
 
 .DS_Store
+
+
+*.pkl
+*.h5
+*.wav
+
+.DS_Store
+
+# Temporary files
+temp_audio.wav
+*.tmp
+
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
