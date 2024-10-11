@@ -172,5 +172,5 @@ ESC-50-master.zip
 
 
 
-*.h5
-*.pkl
+dog_bark_detection/*.h5
+dog_bark_detection/*.pkl
