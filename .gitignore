@@ -168,9 +168,11 @@ dog_bark_detection/meta/
 dog_bark_detection/personal_test_audio/
 
 ESC-50-master/
-ESC-50-master.zip
+ESC-50-master.zip/
 
 
 
 dog_bark_detection/*.h5
 dog_bark_detection/*.pkl
+
+.DS_Store
