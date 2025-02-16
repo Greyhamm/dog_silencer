@@ -1,214 +1,212 @@
-# Dog Bark Detection System
+# Dog Silencer System
 
-This project aims to detect dog barks in audio using machine learning techniques. It provides two approaches:
+The **Dog Silencer System** is an end-to-end solution that detects dog barks in real time and emits ultrasonic pulses as a deterrent. The system uses modern machine learning techniques with pre-trained audio embeddings (via the CLAP model) and a custom-trained classifier. It also integrates with Firebase to remotely control settings and log events.
 
-1. **Using CLAP (Contrastive Language-Audio Pretraining)**: Leveraging pre-trained embeddings from the CLAP model and training a classifier.
-2. **Without CLAP**: Building and training a Convolutional Neural Network (CNN) from scratch using extracted MFCC features.
-
----
-
-## **Table of Contents**
-
-- [Dog Bark Detection System](#dog-bark-detection-system)
-  - [**Table of Contents**](#table-of-contents)
-  - [**Project Structure**](#project-structure)
-  - [**Prerequisites**](#prerequisites)
-  - [**Setup Instructions**](#setup-instructions)
-    - [**1. Clone the Repository**](#1-clone-the-repository)
-    - [**2. Set Up the Virtual Environment**](#2-set-up-the-virtual-environment)
-    - [**3. Install Dependencies**](#3-install-dependencies)
-  - [**Approach 1: Using CLAP**](#approach-1-using-clap)
-    - [**1. Organize the Dataset**](#1-organize-the-dataset)
-    - [**2. Extract Embeddings**](#2-extract-embeddings)
-    - [**3. Train the Classifier**](#3-train-the-classifier)
-    - [**4. Run Real-Time Detection**](#4-run-real-time-detection)
-  - [**Approach 2: Without CLAP**](#approach-2-without-clap)
-    - [**1. Organize the Dataset**](#1-organize-the-dataset-1)
-    - [**2. Preprocess Audio Data**](#2-preprocess-audio-data)
-    - [**3. Extract Features**](#3-extract-features)
-    - [**4. Prepare Data for Training**](#4-prepare-data-for-training)
-    - [**5. Train the CNN Model**](#5-train-the-cnn-model)
-    - [**6. Run Real-Time Detection**](#6-run-real-time-detection)
-  - [**Citations**](#citations)
-    - [**Using CLAP**](#using-clap)
-    - [**Without CLAP**](#without-clap)
-  - [**License**](#license)
+> **Important:** Before running the integrated system, you must train the model to generate the necessary files (e.g., `dog_bark_classifier.pkl`). Follow the instructions below to set up your dataset and train the classifier.
 
 ---
 
-## **Project Structure**
+## Table of Contents
 
-```
-dog_bark_detection/
-├── scripts/
-│   ├── organize_data.py
-│   ├── preprocess_audio.py
-│   ├── extract_features.py
-│   ├── prepare_data.py
-│   ├── train_model.py
-│   ├── extract_embeddings.py
-│   ├── train_classifier.py
-│   ├── real_time_detection_clap.py
-│   ├── real_time_detection_classifier.py
-│   ├── real_time_detection.py
-│   ├── evaluate_model.py
-│   └── plot_history.py
-├── requirements.txt
-├── .gitignore
-└── README.md
-```
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Hardware & Software Requirements](#hardware--software-requirements)
+- [Setup Instructions](#setup-instructions)
+  - [1. Clone the Repository](#1-clone-the-repository)
+  - [2. Set Up the Virtual Environment](#2-set-up-the-virtual-environment)
+  - [3. Install Dependencies](#3-install-dependencies)
+- [Training the Model](#training-the-model)
+  - [1. Organize the Dataset](#1-organize-the-dataset)
+  - [2. (Optional) Preprocess Audio Files](#2-optional-preprocess-audio-files)
+  - [3. Extract Audio Embeddings](#3-extract-audio-embeddings)
+  - [4. Train the Classifier](#4-train-the-classifier)
+- [Firebase Configuration](#firebase-configuration)
+- [Usage](#usage)
+- [Additional Scripts](#additional-scripts)
+- [Citations](#citations)
+- [License](#license)
 
 ---
 
-## **Prerequisites**
+## Overview
 
-- **Operating System:** macOS
-- **Python:** 3.8 or higher (Python 3.11 recommended)
-- **Virtual Environment Manager:** `venv` or any other of your choice
-- **Audio Libraries:** PortAudio (for PyAudio)
+The Dog Silencer System continuously listens for dog barks via a microphone and processes the audio using the CLAP model along with a custom-trained classifier. When a bark is detected, the system:
+- Logs the event (timestamp and distance) to Firebase.
+- Immediately emits ultrasonic pulses (using Raspberry Pi GPIO pins) to deter the dog.
 
 ---
 
-## **Setup Instructions**
+## Key Features
 
-### **1. Clone the Repository**
+- **Real-Time Audio Detection:** Continuously captures and processes audio.
+- **Integrated Deterrent Activation:** Immediately emits ultrasonic pulses upon detecting a dog bark.
+- **Remote Control & Logging:** Uses Firebase Realtime Database for remote system management and event logging.
+- **Customizable Training Pipeline:** Includes scripts to organize data, extract embeddings, and train a classifier.
+
+---
+
+## Hardware & Software Requirements
+
+- **Hardware:**
+  - Raspberry Pi (or similar device with GPIO support)
+  - Microphone for capturing audio
+  - Ultrasonic emitter and sensor (e.g., HC-SR04) connected via GPIO
+- **Software:**
+  - **Python:** 3.8 or higher (Python 3.11 recommended)
+  - **Libraries:** `pyaudio`, `numpy`, `tensorflow`, `RPi.GPIO`, `firebase-admin`, `soundfile`, `msclap`, etc.
+
+---
+
+## Setup Instructions
+
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your_username/dog_bark_detection.git
-cd dog_bark_detection
+git clone https://github.com/your_username/dog_silencer.git
+cd dog_silencer/dog_bark_detection
 ```
 
-### **2. Set Up the Virtual Environment**
+### 2. Set Up the Virtual Environment
 
 ```bash
-python3 -m venv bark_env
-source bark_env/bin/activate
+python3 -m venv silencer_env
+source silencer_env/bin/activate
 ```
 
-### **3. Install Dependencies**
+### 3. Install Dependencies
+
+Upgrade `pip` and install the required packages:
 
 ```bash
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-**Note:** Ensure you have `portaudio` installed on your system for PyAudio:
-
-```bash
-brew install portaudio
-```
-
----
-
-## **Approach 1: Using CLAP**
-
-### **1. Organize the Dataset**
-
-- Create directories for dog barks and non-dog sounds:
-
-  ```bash
-  mkdir -p dataset/dog
-  mkdir -p dataset/no_dog
-  ```
-
-- Place your audio files in the corresponding directories:
-
-  - `dataset/dog/` for dog bark audio files
-  - `dataset/no_dog/` for non-dog audio files
-
-### **2. Extract Embeddings**
-
-Run the script to extract embeddings using CLAP:
-
-```bash
-python scripts/extract_embeddings.py
-```
-
-This will generate `embeddings_labels.pkl`.
-
-### **3. Train the Classifier**
-
-Train a classifier using the extracted embeddings:
-
-```bash
-python scripts/train_classifier.py
-```
-
-This will generate `dog_bark_classifier.pkl`.
-
-### **4. Run Real-Time Detection**
-
-Start real-time dog bark detection using the trained classifier:
-
-```bash
-python scripts/real_time_detection_classifier.py
-```
+> **Note:** For PyAudio, make sure you have PortAudio installed on your system.  
+> - **macOS:** `brew install portaudio`  
+> - **Raspberry Pi (Debian/Ubuntu):**  
+>   ```bash
+>   sudo apt-get install libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0
+>   ```
 
 ---
 
-## **Approach 2: Without CLAP**
+## Training the Model
 
-### **1. Organize the Dataset**
+Before running the integrated system, you need to train the classifier that detects dog barks. This involves organizing your dataset, extracting audio embeddings with the CLAP model, and training the classifier.
 
-- Use the same dataset structure as in Approach 1.
+### 1. Organize the Dataset
 
-### **2. Preprocess Audio Data**
-
-Preprocess audio files to ensure consistent sampling rate and format:
+Create directories for dog barks and non-dog sounds:
 
 ```bash
-python scripts/preprocess_audio.py
+mkdir -p dataset/dog
+mkdir -p dataset/no_dog
 ```
 
-### **3. Extract Features**
+Place your audio files in these directories:
+- **Dog barks:** `dataset/dog/`
+- **Non-dog sounds:** `dataset/no_dog/`
 
-Extract MFCC features from the audio files:
+If you need help organizing files from a larger dataset (e.g., ESC-50), you can use the provided script:
 
 ```bash
-python scripts/extract_features.py
+python organize_data.py
 ```
 
-This will generate `features_labels.pkl`.
+### 2. (Optional) Preprocess Audio Files
 
-### **4. Prepare Data for Training**
-
-Prepare the data for model training:
+If your audio files need to be resampled or converted to mono, run:
 
 ```bash
-python scripts/prepare_data.py
+python preprocess_audio.py
 ```
 
-This will generate `prepared_data.pkl`.
+This script standardizes your audio files to a consistent sample rate and format.
 
-### **5. Train the CNN Model**
+### 3. Extract Audio Embeddings
 
-Train the Convolutional Neural Network (CNN):
+Use the CLAP model to extract embeddings from your audio files. This step creates an `embeddings_labels.pkl` file.
 
 ```bash
-python scripts/train_model.py
+python extract_embeddings.py
 ```
 
-This will generate `dog_bark_detector.h5`.
+### 4. Train the Classifier
 
-### **6. Run Real-Time Detection**
-
-Start real-time dog bark detection using the trained CNN model:
+Train the classifier using the extracted embeddings. This will generate the file `dog_bark_classifier.pkl` which is used by the integrated system.
 
 ```bash
-python scripts/real_time_detection.py
+python train_classifier.py
 ```
+
+After running these steps, verify that you have the following key files in your project directory:
+- `embeddings_labels.pkl`
+- `dog_bark_classifier.pkl`
 
 ---
 
-## **Citations**
+## Firebase Configuration
 
-### **Using CLAP**
+The system uses Firebase to manage settings and log events. Before running the system:
 
-If you use the CLAP model in your project, please cite the following:
+1. Obtain your Firebase service account key:
+   - Visit the [Firebase Console](https://console.firebase.google.com/).
+   - Create (or select) your project.
+   - Generate a service account key and download the JSON file.
+2. Place the JSON file in the `firebase_config/` directory (e.g., `firebase_config/firebaseconfig.json`).
 
-**CLAP: Learning Audio Concepts from Natural Language Supervision**
+---
 
-```plaintext
+## Usage
+
+The integrated real-time system is implemented in **silencerV1.py**. This script:
+- Continuously captures audio.
+- Uses the CLAP model and the trained classifier (`dog_bark_classifier.pkl`) to detect dog barks.
+- Logs detection events to Firebase.
+- Activates ultrasonic pulses upon detection.
+
+To run the system, execute:
+
+```bash
+python silencerV1.py
+```
+
+Press `CTRL+C` to gracefully stop the system.
+
+---
+
+## Additional Scripts
+
+The repository includes several additional scripts for data preparation, training, and testing:
+
+- **Data Organization & Preprocessing:**
+  - `organize_data.py`: Organizes the dataset into proper directories.
+  - `preprocess_audio.py`: Resamples and converts audio files.
+  - `extract_features.py`: Extracts MFCC features (used if training the CNN model).
+  
+- **Model Training & Evaluation:**
+  - `prepare_data.py`: Prepares and pads feature data.
+  - `train_model.py`: Trains a CNN for dog bark detection (alternative approach).
+  - `plot_history.py`: Plots training history (accuracy and loss).
+  - `evaluate_model.py`: Evaluates the trained CNN.
+  
+- **Testing & Real-Time Detection (Alternative Implementations):**
+  - `test_model.py`: Tests the CNN on individual audio files.
+  - `real_time_detection.py`: Implements a CNN-based real-time detection.
+  - `real_time_audio_detection_filesave.py` & `real_time_detection_algorithm.py`: Additional variants for real-time processing.
+
+Feel free to explore these scripts if you wish to customize or extend the system.
+
+---
+
+## Citations
+
+If you use the CLAP model or the ESC-50 dataset in your project, please cite the following works:
+
+### CLAP
+
+```bibtex
 @inproceedings{CLAP2022,
   title={CLAP: Learning Audio Concepts from Natural Language Supervision},
   author={Elizalde, Benjamin and Deshmukh, Soham and Al Ismail, Mahmoud and Wang, Huaming},
@@ -219,9 +217,7 @@ If you use the CLAP model in your project, please cite the following:
 }
 ```
 
-**Natural Language Supervision for General-Purpose Audio Representations**
-
-```plaintext
+```bibtex
 @misc{CLAP2023,
       title={Natural Language Supervision for General-Purpose Audio Representations}, 
       author={Benjamin Elizalde and Soham Deshmukh and Huaming Wang},
@@ -233,13 +229,9 @@ If you use the CLAP model in your project, please cite the following:
 }
 ```
 
-### **Without CLAP**
+### ESC-50 Dataset
 
-If you use the ESC-50 dataset in your project, please cite the following:
-
-**ESC: Dataset for Environmental Sound Classification**
-
-```plaintext
+```bibtex
 @inproceedings{ESC50,
   title={ESC: Dataset for Environmental Sound Classification},
   author={Karol J. Piczak},
@@ -252,10 +244,12 @@ If you use the ESC-50 dataset in your project, please cite the following:
 
 ---
 
-## **License**
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.
 
 ---
 
-**Note:** Replace `https://github.com/your_username/dog_bark_detection.git` with the actual URL of your GitHub repository.
+*Replace `https://github.com/your_username/dog_silencer.git` with your actual repository URL.*
+
+Enjoy building and customizing your Dog Silencer System! If you have any questions or suggestions, please open an issue or submit a pull request.
