@@ -1,5 +1,7 @@
 # Dog Silencer System
 
+![Pulse Activation Diagram](setup/setup.png)
+
 The **Dog Silencer System** is an end-to-end solution that detects dog barks in real time and emits ultrasonic pulses as a deterrent. The system uses modern machine learning techniques with pre-trained audio embeddings (via the CLAP model) and a custom-trained classifier. It also integrates with Firebase to remotely control settings and log events.
 
 > **Important:** Before running the integrated system, you must train the model to generate the necessary files (e.g., `dog_bark_classifier.pkl`). Follow the instructions below to set up your dataset and train the classifier.

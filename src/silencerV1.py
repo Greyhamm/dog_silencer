@@ -101,8 +101,10 @@ class DogDeterrentSystem:
             distance = self.measure_distance()
             if distance is not None:
                 self.ref.child('current_distance').set(float(distance))
-            time.sleep(0.1)
+            # Reduced sleep to 5ms to simulate nearly continuous emission
+            time.sleep(0.00025)
         self.ref.child('is_pulsing').set(False)
+
 
     def monitor_manual_pulse(self):
         while True:
